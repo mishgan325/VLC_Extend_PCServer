@@ -1,4 +1,4 @@
-package PCServerSocket;
+package ru.mishgan325.vlc_extend_pcserver;
 
 public class LowPassFilter {
     private final float alpha;

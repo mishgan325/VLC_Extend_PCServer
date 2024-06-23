@@ -1,4 +1,4 @@
-package PCServerSocket;
+package ru.mishgan325.vlc_extend_pcserver;
 
 import javax.swing.*;
 import java.awt.*;
