@@ -1,143 +1,108 @@
 package PCServerSocket;
 
+import java.awt.AWTException;
+import java.awt.Robot;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
-
-import java.io.*;
-import java.net.*;
-import java.awt.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.InetAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
+
+import com.google.gson.Gson;
 
 public class PCServer {
 
-    private static int xMove = 0;
-    private static int yMove = 0;
-
-    private static String parts[];
+    private static int xMouse = 0;
+    private static int yMouse = 0;
 
     public static void main(String[] args) throws IOException, AWTException {
         Robot robot = new Robot();
         ServerSocket serverSocket = new ServerSocket(12345); // Создаем серверный соксет на порту 12345
 
-        InetAddress ip = InetAddress.getLocalHost();
-        System.out.println("IP адрес сервера: " + ip.getHostAddress());
         System.out.println("Сервер ожидает подключения...");
 
-        QRCodeGenerator qrCodeGenerator = new QRCodeGenerator();
-        qrCodeGenerator.generateQRCode(ip.getHostAddress());
 
-        Point mouseLocation;
+        InetAddress ip = InetAddress.getLocalHost();
+        System.out.println("IP адрес сервера: " + ip.getHostAddress());
 
         Socket clientSocket = serverSocket.accept(); // Ожидаем подключение клиента
-
         System.out.println("Клиент подключен.");
-        qrCodeGenerator.closeQRCodeWindow();
 
         // Получение входного и выходного потоков для обмена данными с клиентом
         BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
         PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
 
         String message;
-        while ((message = in.readLine()) != null) {
-//            System.out.println("Получено от клиента: " + message);
-            xMove = yMove = 0;
-            mouseLocation = MouseInfo.getPointerInfo().getLocation();
+        Gson gson = new Gson();
 
-            switch (message) {
-                case "WINDOWS" -> {
-                    robot.keyPress(KeyEvent.VK_WINDOWS);
-                    robot.keyRelease(KeyEvent.VK_WINDOWS);
-                }
-                case "VOLUME+" -> {
-                    MediaButtonsControl.User32.INSTANCE.keybd_event((byte) MediaButtonsControl.User32.VK_VOLUME_UP, (byte) 0, 0, 0);
-                    MediaButtonsControl.User32.INSTANCE.keybd_event((byte) MediaButtonsControl.User32.VK_VOLUME_UP, (byte) 0, 2, 0);
-                }
-                case "VOLUME-" -> {
-                    MediaButtonsControl.User32.INSTANCE.keybd_event((byte) MediaButtonsControl.User32.VK_VOLUME_DOWN, (byte) 0, 0, 0);
-                    MediaButtonsControl.User32.INSTANCE.keybd_event((byte) MediaButtonsControl.User32.VK_VOLUME_DOWN, (byte) 0, 2, 0);
-                }
-                case "MUTE" -> {
-                    MediaButtonsControl.User32.INSTANCE.keybd_event((byte) MediaButtonsControl.User32.VK_VOLUME_MUTE, (byte) 0, 0, 0);
-                    MediaButtonsControl.User32.INSTANCE.keybd_event((byte) MediaButtonsControl.User32.VK_VOLUME_MUTE, (byte) 0, 2, 0);
-                }
-                case "PAUSE" -> {
-                    MediaButtonsControl.User32.INSTANCE.keybd_event((byte) MediaButtonsControl.User32.VK_MEDIA_PLAY_PAUSE, (byte) 0, 0, 0);
-                    MediaButtonsControl.User32.INSTANCE.keybd_event((byte) MediaButtonsControl.User32.VK_MEDIA_PLAY_PAUSE, (byte) 0, 2, 0);
-                }
-                case "NEXT" -> {
-                    MediaButtonsControl.User32.INSTANCE.keybd_event((byte) MediaButtonsControl.User32.VK_NEXT_TRACK, (byte) 0, 0, 0);
-                    MediaButtonsControl.User32.INSTANCE.keybd_event((byte) MediaButtonsControl.User32.VK_NEXT_TRACK, (byte) 0, 2, 0);
-                }
-                case "PREV" -> {
-                    MediaButtonsControl.User32.INSTANCE.keybd_event((byte) MediaButtonsControl.User32.VK_PREVIOUS_TRACK, (byte) 0, 0, 0);
-                    MediaButtonsControl.User32.INSTANCE.keybd_event((byte) MediaButtonsControl.User32.VK_PREVIOUS_TRACK, (byte) 0, 2, 0);
-                }
-                case "RIGHT" -> {
-                    robot.keyPress(KeyEvent.VK_RIGHT);
-                    robot.keyRelease(KeyEvent.VK_RIGHT);
-                }
-                case "LEFT" -> {
-                    robot.keyPress(KeyEvent.VK_LEFT);
-                    robot.keyRelease(KeyEvent.VK_LEFT);
-                }
-                case "UP" -> {
+        while ((message = in.readLine()) != null) {
+            System.out.println("Получено от клиента: " + message);
+
+            try {
+                InputState inputState = gson.fromJson(message, InputState.class);
+//                processInputState(inputState, robot);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private static void processInputState(InputState inputState, Robot robot) {
+        // Обработка нажатых клавиш
+        for (String key : inputState.getPressedKeys()) {
+            switch (key) {
+                case "ArrowUp":
                     robot.keyPress(KeyEvent.VK_UP);
                     robot.keyRelease(KeyEvent.VK_UP);
-                }
-                case "DOWN" -> {
+                    break;
+                case "ArrowDown":
                     robot.keyPress(KeyEvent.VK_DOWN);
                     robot.keyRelease(KeyEvent.VK_DOWN);
-                }
-                case "V" -> {
-                    robot.keyPress(KeyEvent.VK_V);
-                    robot.keyRelease(KeyEvent.VK_V);
-                }
-                case "B" -> {
-                    robot.keyPress(KeyEvent.VK_B);
-                    robot.keyRelease(KeyEvent.VK_B);
-                }
-                case "[" -> {
-                    robot.keyPress(KeyEvent.VK_OPEN_BRACKET);
-                    robot.keyRelease(KeyEvent.VK_OPEN_BRACKET);
-                }
-                case "]" -> {
-                    robot.keyPress(KeyEvent.VK_CLOSE_BRACKET);
-                    robot.keyRelease(KeyEvent.VK_CLOSE_BRACKET);
-                }
-                case "LMB", "LMB_CLICK" -> {
-                    robot.mousePress(InputEvent.BUTTON1_DOWN_MASK);
-                    robot.mouseRelease(InputEvent.BUTTON1_DOWN_MASK);
-                }
-                case "RMB", "RMB_CLICK" -> {
-                    robot.mousePress(InputEvent.BUTTON3_DOWN_MASK);
-                    robot.mouseRelease(InputEvent.BUTTON3_DOWN_MASK);
-                }
-
-                case "LMB_HOLD" -> {
-                    robot.mousePress(InputEvent.BUTTON1_DOWN_MASK);
-                }
-                case "LMB_RELEASE" -> {
-                    robot.mouseRelease(InputEvent.BUTTON1_DOWN_MASK);
-                }
-                default -> {
-                    if(message.contains("MouseWheel")) {
-                        parts = message.split("\\|");
-                        robot.mouseWheel(Integer.parseInt(parts[1])/10);
-                    }
-                    else {
-                        parts = message.split("\\|");
-                        robot.mouseMove((int)mouseLocation.getX() + Integer.parseInt(parts[0]), (int)mouseLocation.getY() + + Integer.parseInt(parts[1]));
-                    }
-
-                }
-
-
+                    break;
+                // Добавьте другие обработчики для других клавиш по аналогии
+                default:
+                    break;
             }
-
-
         }
 
-        //clientSocket.close();
-        //serverSocket.close();
+        // Обработка изменения координаты мыши
+        xMouse += inputState.getDeltaX();
+        yMouse += inputState.getDeltaY();
+        robot.mouseMove(xMouse, yMouse);
+    }
+
+    // Класс для представления состояния ввода в JSON
+    private static class InputState {
+        private String[] pressedKeys;
+        private int deltaX;
+        private int deltaY;
+
+        public String[] getPressedKeys() {
+            return pressedKeys;
+        }
+
+        public void setPressedKeys(String[] pressedKeys) {
+            this.pressedKeys = pressedKeys;
+        }
+
+        public int getDeltaX() {
+            return deltaX;
+        }
+
+        public void setDeltaX(int deltaX) {
+            this.deltaX = deltaX;
+        }
+
+        public int getDeltaY() {
+            return deltaY;
+        }
+
+        public void setDeltaY(int deltaY) {
+            this.deltaY = deltaY;
+        }
     }
 }
