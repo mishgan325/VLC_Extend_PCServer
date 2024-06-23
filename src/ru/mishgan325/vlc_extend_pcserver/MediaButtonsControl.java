@@ -4,6 +4,7 @@ import com.sun.jna.Library;
 import com.sun.jna.Native;
 
 public class MediaButtonsControl {
+
     public interface User32 extends Library {
         User32 INSTANCE = (User32) Native.loadLibrary("user32", User32.class);
 
@@ -14,17 +15,15 @@ public class MediaButtonsControl {
         int VK_PREVIOUS_TRACK = 0xB1;
         int VK_NEXT_TRACK = 0xB0;
 
-
+        boolean setCursorPos(int x, int y);
         void keybd_event(byte bVk, byte bScan, int dwFlags, int dwExtraInfo);
     }
 
-    public static void main(String[] args) {
-        // Отправить команду Play/Pause
-        User32.INSTANCE.keybd_event((byte) User32.VK_MEDIA_PLAY_PAUSE, (byte) 0, 0, 0);
-        User32.INSTANCE.keybd_event((byte) User32.VK_MEDIA_PLAY_PAUSE, (byte) 0, 2, 0);
+    public static void keyPress(int keyCode) {
+        User32.INSTANCE.keybd_event((byte) keyCode, (byte) 0, 0, 0);
+    }
 
-        // Отправить команду Volume Up
-        User32.INSTANCE.keybd_event((byte) User32.VK_VOLUME_UP, (byte) 0, 0, 0);
-        User32.INSTANCE.keybd_event((byte) User32.VK_VOLUME_UP, (byte) 0, 2, 0);
+    public static void keyRelease(int keyCode) {
+        User32.INSTANCE.keybd_event((byte) keyCode, (byte) 0, 2, 0);
     }
 }
